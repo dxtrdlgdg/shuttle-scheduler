@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0f1a; --surface: #111827; --surface2: #1a2236;
+    --accent: #f0c040; --accent2: #3b82f6;
+    --text: #e8edf5; --muted: #6b7a99; --border: rgba(255,255,255,0.07);
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  .app { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+  header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; letter-spacing: 3px; color: var(--accent); line-height: 1; }
+  header span { color: var(--muted); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; }
+  .two-col { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px; color: var(--accent); margin-bottom: 14px; }
+  .input-group { margin-bottom: 14px; }
+  .input-group label { display: block; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', monospace; font-size: 0.85rem; padding: 12px; resize: vertical; line-height: 1.7; transition: border-color 0.2s; }
+  textarea:focus { outline: none; border-color: var(--accent2); }
+  .row-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  input[type=number], input[type=time] { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 10px 12px; }
+  input:focus { outline: none; border-color: var(--accent2); }
+  .btn { width: 100%; padding: 13px; background: var(--accent); color: #0a0f1a; border: none; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; letter-spacing: 1px; padding: 8px; margin-top: 8px; }
+
+  /* PARSED PREVIEW */
+  .preview-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 14px; max-height: 160px; overflow-y: auto; }
+  .preview-cat { font-size: 0.72rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 8px; margin-bottom: 4px; }
+  .preview-cat:first-child { margin-top: 0; }
+  .preview-pair { font-size: 0.8rem; color: var(--text); padding: 1px 0 1px 10px; border-left: 2px solid var(--border); margin-bottom: 2px; }
+  .preview-err { font-size: 0.78rem; color: #f87171; }
+
+  /* OUTPUT */
+  .schedule-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .schedule-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 2px; color: var(--accent); }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { background: var(--surface2); border-radius: 8px; padding: 8px 14px; text-align: center; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--accent); line-height: 1; }
+  .stat-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .court-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .court-badge { display: flex; align-items: center; gap: 6px; background: var(--surface2); border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; }
+  .court-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab { padding: 8px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 500; cursor: pointer; background: var(--surface2); color: var(--muted); border: 1px solid transparent; transition: all 0.2s; }
+  .tab.active { background: var(--accent); color: #0a0f1a; font-weight: 700; }
+
+  /* MATCH LIST */
+  .match-list { display: flex; flex-direction: column; gap: 6px; }
+  .match-group-label { font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; letter-spacing: 2px; color: var(--muted); margin-top: 14px; margin-bottom: 4px; padding-left: 4px; }
+  .match-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 11px 16px; display: grid; grid-template-columns: 72px 90px 1fr auto; align-items: center; gap: 12px; }
+  .match-item:hover { border-color: rgba(255,255,255,0.15); }
+  .match-time { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--accent); }
+  .match-court { font-size: 0.78rem; font-weight: 600; }
+  .match-players { font-size: 0.87rem; }
+  .match-players em { color: var(--muted); font-style: normal; font-size: 0.78rem; }
+  .cat-tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+
+  /* TIMELINE */
+  .timeline-wrap { overflow-x: auto; }
+  .timeline { display: grid; gap: 0; min-width: 700px; }
+  .tl-corner, .tl-time { background: var(--surface2); border: 1px solid var(--border); padding: 6px 4px; font-size: 0.68rem; color: var(--muted); text-align: center; font-weight: 500; }
+  .tl-court-label { background: var(--surface2); border: 1px solid var(--border); padding: 8px 4px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .tl-slot { border: 1px solid var(--border); min-height: 62px; position: relative; background: var(--bg); }
+  .match-card { position: absolute; inset: 3px; border-radius: 6px; padding: 4px 6px; font-size: 0.68rem; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+  .match-card .mc-cat { font-size: 0.58rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
+  .match-card .mc-p { font-weight: 600; color: #fff; line-height: 1.25; }
+  .match-card .mc-vs { font-size: 0.58rem; opacity: 0.65; }
+
+  .conflict-warn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; color: #fca5a5; margin-bottom: 12px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🏸 SHUTTLE SCHEDULER</h1>
+    <span>Round Robin · Multi-Court · Player Conflict Resolver</span>
+  </header>
+  <div class="two-col">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">CATEGORIES & PAIRS</div>
+        <div class="input-group">
+          <label>Format: Category header line, then Pair1-Pair2 per line</label>
+          <textarea id="inputText" rows="20" oninput="livePreview()" placeholder="Mens Doubles Intermediate&#10;Jayvee-Dexter&#10;Yell-Albert&#10;..."></textarea>
+        </div>
+
+        <div class="panel-title" style="font-size:0.9rem;margin-bottom:6px;">PARSED PREVIEW</div>
+        <div class="preview-box" id="previewBox"><span style="color:var(--muted);font-size:0.8rem">Paste data above to preview...</span></div>
+
+        <div class="row-inputs">
+          <div class="input-group"><label>Courts</label><input type="number" id="numCourts" value="5" min="1" max="20"></div>
+          <div class="input-group"><label>Match Duration (min)</label><input type="number" id="matchDuration" value="20" min="5" max="60"></div>
+        </div>
+        <div class="row-inputs">
+          <div class="input-group"><label>Start Time</label><input type="time" id="startTime" value="09:00"></div>
+          <div class="input-group"><label>End Time</label><input type="time" id="endTime" value="17:00"></div>
+        </div>
+        <div class="input-group"><label>Interval between matches (min)</label><input type="number" id="interval" value="5" min="0" max="30"></div>
+        <button class="btn" onclick="generateSchedule()">⚡ GENERATE SCHEDULE</button>
+        <button class="btn btn-secondary" onclick="loadSample()">Load Sample Data</button>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div id="outputPanel">
+      <div class="empty-state">
+        <div class="icon">🏟️</div>
+        <p>Paste your player pairs and hit Generate.<br>The scheduler avoids player conflicts automatically.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAMPLE = `Mens Doubles Intermediate
+Jayvee-Dexter
+Yell-Albert
+Gab-Chang
+Aaron-Karle
+Omik-Marco
+Ryan G-Justien
+Renan-Kent
+
+Mixed Doubles Advance
+Edther-Renan
+Irene-Jowen
+Marah-Andrew
+
+Mens Doubles Advance
+Lucas-Jowen
+Jock-Aaron
+Jyar-Nero
+Riley-Jayvee
+Andrew-Gab
+Samboy-Reu
+Christian-Justien
+
+Womens Doubles - Intermediate
+Louie-Salie
+Mafe-Luz
+Edther-Trisha
+Irene-Jang`;
+
+const COURT_COLORS = ['#f0c040','#3b82f6','#10b981','#f97316','#a78bfa','#ec4899','#06b6d4','#84cc16'];
+const CAT_COLORS   = ['#f0c040','#3b82f6','#10b981','#f97316','#a78bfa','#ec4899'];
+
+function loadSample() {
+  document.getElementById('inputText').value = SAMPLE;
+  livePreview();
+}
+
+/* ── PARSER ──────────────────────────────────────────────────────────────
+   A line is a PAIR if it contains exactly one dash and BOTH sides are
+   non-empty after trimming.  Everything else is a category header.
+   Special case: "Ryan G-Justien" → left side = "Ryan G", right = "Justien"
+   We split on the LAST dash so names with spaces + dash work fine.
+──────────────────────────────────────────────────────────────────────── */
+function isPairLine(line) {
+  // Must contain a dash
+  if (!line.includes('-')) return false;
+  const lastDash = line.lastIndexOf('-');
+  const left  = line.slice(0, lastDash).trim();
+  const right = line.slice(lastDash + 1).trim();
+  // Both sides must be non-empty and neither side should be empty or purely numeric
+  return left.length > 0 && right.length > 0;
+}
+
+function splitPair(line) {
+  const lastDash = line.lastIndexOf('-');
+  return [line.slice(0, lastDash).trim(), line.slice(lastDash + 1).trim()];
+}
+
+function parseInput(text) {
+  const lines = text.split('\n');
+  const categories = [];
+  let current = null;
+
+  for (let raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    if (isPairLine(line)) {
+      // It's a player pair
+      if (!current) {
+        current = { name: 'Uncategorized', pairs: [] };
+        categories.push(current);
+      }
+      current.pairs.push(splitPair(line));
+    } else {
+      // It's a category header
+      current = { name: line, pairs: [] };
+      categories.push(current);
+    }
+  }
+  return categories.filter(c => c.pairs.length > 0);
+}
+
+function livePreview() {
+  const text = document.getElementById('inputText').value;
+  const box = document.getElementById('previewBox');
+  if (!text.trim()) { box.innerHTML = '<span style="color:var(--muted);font-size:0.8rem">Paste data above to preview...</span>'; return; }
+  const cats = parseInput(text);
+  if (!cats.length) { box.innerHTML = '<span class="preview-err">Could not detect any pairs. Make sure pairs use a dash (e.g. Player1-Player2).</span>'; return; }
+  let html = '';
+  cats.forEach(c => {
+    html += `<div class="preview-cat">${c.name} <span style="color:var(--muted);font-weight:400">(${c.pairs.length} pairs · ${c.pairs.length*(c.pairs.length-1)/2} matches)</span></div>`;
+    c.pairs.forEach(p => { html += `<div class="preview-pair">${p[0]} &amp; ${p[1]}</div>`; });
+  });
+  box.innerHTML = html;
+}
+
+function timeToMin(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minToTime(m) { return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
+
+function playersOf(pair) {
+  return [pair[0].toLowerCase().trim(), pair[1].toLowerCase().trim()];
+}
+
+function roundRobin(pairs) {
+  const out = [];
+  for (let i=0;i<pairs.length;i++)
+    for (let j=i+1;j<pairs.length;j++)
+      out.push([pairs[i], pairs[j]]);
+  return out;
+}
+
+function generateSchedule() {
+  const text = document.getElementById('inputText').value;
+  if (!text.trim()) { alert('Please enter player pairs first.'); return; }
+
+  const numCourts  = parseInt(document.getElementById('numCourts').value)    || 5;
+  const matchDur   = parseInt(document.getElementById('matchDuration').value) || 20;
+  const interval   = parseInt(document.getElementById('interval').value)      || 5;
+  const startMin   = timeToMin(document.getElementById('startTime').value);
+  const endMin     = timeToMin(document.getElementById('endTime').value);
+  const slotDur    = matchDur + interval;
+
+  const categories = parseInput(text);
+  if (!categories.length) { alert('No valid pairs found. Check your input format.'); return; }
+
+  // Build flat match queue — interleave categories for variety
+  const queues = categories.map(cat => ({
+    cat: cat.name,
+    catIdx: categories.indexOf(cat),
+    matches: roundRobin(cat.pairs)
+  }));
+
+  // Interleave: pull one match per category in rotation
+  const pending = [];
+  let more = true;
+  let round = 0;
+  while (more) {
+    more = false;
+    queues.forEach(q => {
+      if (round < q.matches.length) { pending.push({ cat: q.cat, catIdx: q.catIdx, pair1: q.matches[round][0], pair2: q.matches[round][1] }); more = true; }
+    });
+    round++;
+  }
+
+  // Greedy scheduler
+  const courts = Array.from({length: numCourts}, (_,i) => ({ id: i+1, freeAt: startMin }));
+  const scheduled = [];
+  const unscheduled = [];
+  const remaining = [...pending];
+
+  let guard = 50000;
+  while (remaining.length > 0 && guard-- > 0) {
+    // Sort courts by earliest free
+    courts.sort((a,b) => a.freeAt - b.freeAt);
+    const court = courts[0];
+    if (court.freeAt >= endMin) break;
+
+    // Busy players at the moment this court becomes free
+    const t = court.freeAt;
+    const busy = new Set();
+    scheduled.forEach(s => {
+      if (s.startMin < t + matchDur && s.startMin + matchDur > t) {
+        playersOf(s.pair1).forEach(p => busy.add(p));
+        playersOf(s.pair2).forEach(p => busy.add(p));
+      }
+    });
+
+    // Find first match with no player conflict
+    const idx = remaining.findIndex(m => {
+      return [...playersOf(m.pair1), ...playersOf(m.pair2)].every(p => !busy.has(p));
+    });
+
+    if (idx === -1) {
+      // No match possible for this court right now — bump it forward by one slotDur
+      court.freeAt += slotDur;
+    } else {
+      const m = remaining.splice(idx, 1)[0];
+      scheduled.push({ ...m, startMin: t, court: court.id });
+      court.freeAt = t + slotDur;
+    }
+  }
+
+  // Anything still remaining couldn't fit
+  remaining.forEach(m => unscheduled.push(m));
+
+  renderSchedule(scheduled, unscheduled, categories, numCourts, matchDur, startMin, endMin, slotDur);
+}
+
+function renderSchedule(scheduled, unscheduled, categories, numCourts, matchDur, startMin, endMin, slotDur) {
+  const panel = document.getElementById('outputPanel');
+  const allEnd = scheduled.length ? Math.max(...scheduled.map(s => s.startMin + matchDur)) : startMin;
+  const totalMatchCount = scheduled.length + unscheduled.length;
+
+  let html = `<div class="schedule-header">
+    <div class="schedule-title">MATCH SCHEDULE</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val">${scheduled.length}</div><div class="stat-lbl">Scheduled</div></div>
+      <div class="stat"><div class="stat-val">${totalMatchCount}</div><div class="stat-lbl">Total</div></div>
+      <div class="stat"><div class="stat-val">${minToTime(allEnd)}</div><div class="stat-lbl">Ends At</div></div>
+    </div>
+  </div>`;
+
+  if (unscheduled.length)
+    html += `<div class="conflict-warn">⚠️ ${unscheduled.length} match(es) couldn't fit within the time window. Try extending end time or adding courts.</div>`;
+
+  html += `<div class="court-legend">`;
+  for (let c=1;c<=numCourts;c++)
+    html += `<div class="court-badge"><div class="court-dot" style="background:${COURT_COLORS[c-1]}"></div>Court ${c}</div>`;
+  html += `</div>`;
+
+  html += `<div class="tab-bar">
+    <div class="tab active" onclick="switchTab(this,'list')">📋 Match List</div>
+    <div class="tab" onclick="switchTab(this,'timeline')">📊 Timeline</div>
+  </div>`;
+
+  /* ── LIST VIEW ── */
+  const sorted = [...scheduled].sort((a,b) => a.startMin - b.startMin || a.court - b.court);
+  html += `<div id="tab-list" class="match-list">`;
+  let lastTime = null;
+  sorted.forEach(s => {
+    const t = minToTime(s.startMin);
+    if (t !== lastTime) { html += `<div class="match-group-label">${t}</div>`; lastTime = t; }
+    const cc = COURT_COLORS[s.court-1];
+    const catColor = CAT_COLORS[s.catIdx % CAT_COLORS.length];
+    const shortCat = s.cat.replace(/doubles/i,'Dbl').replace(/intermediate/i,'Int').replace(/advance/i,'Adv').replace(/mixed/i,'Mix').replace(/womens/i,"W").replace(/mens/i,"M");
+    html += `<div class="match-item">
+      <div class="match-time">${t}</div>
+      <div class="match-court" style="color:${cc}">● Court ${s.court}</div>
+      <div class="match-players">
+        <strong>${s.pair1[0]}</strong> &amp; <strong>${s.pair1[1]}</strong>
+        <em> vs </em>
+        <strong>${s.pair2[0]}</strong> &amp; <strong>${s.pair2[1]}</strong>
+      </div>
+      <div><span class="cat-tag" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}55">${shortCat}</span></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  /* ── TIMELINE VIEW ── */
+  const usedTimes = [...new Set(scheduled.map(s => s.startMin))].sort((a,b)=>a-b);
+  const slots = usedTimes.length ? usedTimes : [startMin];
+  const colCount = slots.length;
+
+  html += `<div id="tab-timeline" style="display:none"><div class="timeline-wrap">`;
+  html += `<div class="timeline" style="display:grid;grid-template-columns:50px repeat(${colCount},minmax(90px,1fr));gap:0">`;
+  html += `<div class="tl-corner"></div>`;
+  slots.forEach(t => { html += `<div class="tl-time">${minToTime(t)}</div>`; });
+
+  for (let c=1;c<=numCourts;c++) {
+    html += `<div class="tl-court-label" style="color:${COURT_COLORS[c-1]}">C${c}</div>`;
+    slots.forEach(t => {
+      const m = scheduled.find(s => s.court===c && s.startMin===t);
+      if (m) {
+        const catColor = CAT_COLORS[m.catIdx % CAT_COLORS.length];
+        html += `<div class="tl-slot"><div class="match-card" style="background:${catColor}22;border:1px solid ${catColor}66">
+          <div class="mc-cat" style="color:${catColor}">${m.cat.split(' ').slice(0,2).join(' ')}</div>
+          <div class="mc-p">${m.pair1[0]} &amp; ${m.pair1[1]}</div>
+          <div class="mc-vs" style="color:${catColor}">vs</div>
+          <div class="mc-p">${m.pair2[0]} &amp; ${m.pair2[1]}</div>
+        </div></div>`;
+      } else {
+        html += `<div class="tl-slot"></div>`;
+      }
+    });
+  }
+  html += `</div></div></div>`;
+
+  panel.innerHTML = html;
+}
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-list').style.display = tab==='list' ? 'flex' : 'none';
+  document.getElementById('tab-timeline').style.display = tab==='timeline' ? 'block' : 'none';
+}
+
+loadSample();
+</script>
+</body>
+</html>
